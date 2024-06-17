@@ -1,0 +1,14 @@
+apiVersion: v1
+entries:
+  demo-chart:
+  - apiVersion: v2
+    appVersion: 1.16.0
+    created: "2024-06-17T20:30:56.839122413Z"
+    description: A Helm chart for Kubernetes
+    digest: 9baa1c76ce35bcf81eed5dbfacd3b64d1dcd4e60de91d9c9e2f434dd3723b9ce
+    name: demo-chart
+    type: application
+    urls:
+    - https://github.com/cloudnative-zoo/helm-charts/releases/download/demo-chart-0.1.0/demo-chart-0.1.0.tgz
+    version: 0.1.0
+generated: "2024-06-17T20:30:56.839133774Z"
