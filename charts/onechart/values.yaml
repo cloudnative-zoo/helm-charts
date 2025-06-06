@@ -1,6 +1,6 @@
 namespace: example-namespace
 istio:
-  enabled: false
+  enabled: false # Set to true if you want to use Istio service mesh sidecar injection.
 # Default values for onechart.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
