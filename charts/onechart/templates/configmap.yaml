@@ -1,0 +1,10 @@
+{{- if .Values.configMap.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "onechart.fullname" . }}-config
+  annotations:
+    reloader.stakater.com/match: "true"
+data:
+{{ toYaml .Values.configMap.data | indent 2 }}
+{{- end }}
