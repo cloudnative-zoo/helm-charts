@@ -6,4 +6,5 @@ metadata:
     istio.io/dataplane-mode: ambient
     {{- end }}
     do-docker-credentials-secret: "true"
+    dockerhub-pull-secret: "true"
   name: {{ .Values.namespace }}
