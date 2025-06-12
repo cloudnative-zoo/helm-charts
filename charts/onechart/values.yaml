@@ -48,6 +48,19 @@ securityContext: { }
 # runAsNonRoot: true
 # runAsUser: 1000
 
+# New: arbitrary env vars (can be names, values,
+# valueFrom, whatever Kubernetes supports)
+env: []
+# e.g.
+# env:
+#   - name: TZ
+#     value: Europe/Stockholm
+#   - name: MY_SECRET
+#     valueFrom:
+#       secretKeyRef:
+#         name: some-secret
+#         key: password
+
 # This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/
 service:
   # This sets the service type more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
