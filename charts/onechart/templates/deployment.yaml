@@ -10,6 +10,10 @@ spec:
   {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
   {{- end }}
+    {{- if .Values.strategy }}
+  strategy:
+    {{- toYaml .Values.strategy | nindent 4 }}
+  {{- end }}
   selector:
     matchLabels:
       {{- include "onechart.selectorLabels" . | nindent 6 }}
