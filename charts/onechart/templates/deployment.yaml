@@ -20,7 +20,7 @@ spec:
   {{- end }}
   {{- with .Values.deployment.strategy }}
   strategy:
-    {{ toYaml . | nindent 2 }}
+    {{ toYaml . | nindent 4 }}
   {{- end }}
   selector:
     matchLabels:
