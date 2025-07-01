@@ -1,32 +1,34 @@
-{{- if .Values.autoscaling.enabled }}
+{{- if .Values.hpa.enabled }}
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: {{ include "onechart.fullname" . }}
+  namespace: {{ .Values.namespace.name }}
+  {{- with .Values.hpa.labels }}
   labels:
-    {{- include "onechart.labels" . | nindent 4 }}
+    {{ toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .Values.hpa.annotations }}
+  annotations:
+    {{ toYaml . | nindent 4 }}
+  {{- end }}
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
     name: {{ include "onechart.fullname" . }}
-  minReplicas: {{ .Values.autoscaling.minReplicas }}
-  maxReplicas: {{ .Values.autoscaling.maxReplicas }}
+  minReplicas: {{ .Values.hpa.minReplicas }}
+  maxReplicas: {{ .Values.hpa.maxReplicas }}
+  {{- if .Values.hpa.metrics }}
   metrics:
-    {{- if .Values.autoscaling.targetCPUUtilizationPercentage }}
+{{ toYaml .Values.hpa.metrics | indent 4 }}
+  {{- else }}
+  metrics:
     - type: Resource
       resource:
         name: cpu
         target:
           type: Utilization
-          averageUtilization: {{ .Values.autoscaling.targetCPUUtilizationPercentage }}
-    {{- end }}
-    {{- if .Values.autoscaling.targetMemoryUtilizationPercentage }}
-    - type: Resource
-      resource:
-        name: memory
-        target:
-          type: Utilization
-          averageUtilization: {{ .Values.autoscaling.targetMemoryUtilizationPercentage }}
-    {{- end }}
+          averageUtilization: {{ .Values.hpa.targetCPUUtilizationPercentage }}
+  {{- end }}
 {{- end }}

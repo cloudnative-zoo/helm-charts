@@ -3,8 +3,17 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: {{ include "onechart.fullname" . }}-config
+  namespace: {{ .Values.namespace.name }}
+  {{- with .Values.configMap.labels }}
+  labels:
+    {{ toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .Values.configMap.annotations }}
   annotations:
-    reloader.stakater.com/match: "true"
+    {{ toYaml . | nindent 4 }}
+  {{- end }}
 data:
-{{ toYaml .Values.configMap.data | indent 2 }}
+{{- range $key, $value := .Values.configMap.data }}
+  {{ $key }}: {{ quote $value }}
+{{- end }}
 {{- end }}

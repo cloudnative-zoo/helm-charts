@@ -2,97 +2,142 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "onechart.fullname" . }}
+  namespace: {{ .Values.namespace.name }}
+  {{- with .Values.deployment.labels }}
   labels:
-    {{- include "onechart.labels" . | nindent 4 }}
-  annotations:
-    reloader.stakater.com/search: "true"
-spec:
-  {{- if not .Values.autoscaling.enabled }}
-  replicas: {{ .Values.replicaCount }}
+    {{ toYaml . | nindent 4 }}
+  {{- else }}
+  labels:
+    {{ include "onechart.labels" . | nindent 4 }}
   {{- end }}
-    {{- if .Values.strategy }}
+  {{- with .Values.deployment.annotations }}
+  annotations:
+    {{ toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if not .Values.deployment.autoscaling.enabled }}
+  replicas: {{ .Values.deployment.replicas }}
+  {{- end }}
+  {{- with .Values.deployment.strategy }}
   strategy:
-    {{- toYaml .Values.strategy | nindent 4 }}
+    {{ toYaml . | nindent 2 }}
   {{- end }}
   selector:
     matchLabels:
-      {{- include "onechart.selectorLabels" . | nindent 6 }}
+      {{ include "onechart.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.podAnnotations }}
-      annotations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+      {{- with .Values.deployment.pod.labels }}
       labels:
-        {{- include "onechart.labels" . | nindent 8 }}
-        {{- with .Values.podLabels }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
+        {{ toYaml . | nindent 8 }}
+      {{- else }}
+      labels:
+        {{ include "onechart.selectorLabels" . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.deployment.pod.annotations }}
+      annotations:
+        {{ toYaml . | nindent 8 }}
+      {{- end }}
     spec:
-      {{- with .Values.imagePullSecrets }}
-      imagePullSecrets:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      serviceAccountName: {{ include "onechart.serviceAccountName" . }}
-      {{- with .Values.podSecurityContext }}
+      {{- with .Values.deployment.pod.securityContext }}
       securityContext:
-        {{- toYaml . | nindent 8 }}
+        {{ toYaml . | nindent 8 }}
       {{- end }}
+      {{- with .Values.deployment.pod.imagePullSecrets }}
+      imagePullSecrets:
+        {{ toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ if .Values.serviceAccount.create }}{{ include "onechart.fullname" . }}{{ else }}{{ .Values.serviceAccount.name }}{{ end }}
+      restartPolicy: {{ .Values.deployment.pod.restartPolicy }}
+      dnsPolicy: {{ .Values.deployment.pod.dnsPolicy }}
+      hostNetwork: {{ .Values.deployment.pod.hostNetwork }}
+      {{- if .Values.deployment.pod.shareProcessNamespace }}
+      shareProcessNamespace: true
+      {{- end }}
+
+      {{- with .Values.deployment.pod.initContainers }}
+      initContainers:
+        {{ toYaml . | nindent 8 }}
+      {{- end }}
+
       containers:
         - name: {{ .Chart.Name }}
-          {{- with .Values.securityContext }}
+          image: "{{ .Values.deployment.pod.containers.main.image.repository }}:{{ .Values.deployment.pod.containers.main.image.tag }}"
+          imagePullPolicy: {{ .Values.deployment.pod.containers.main.image.pullPolicy }}
+          {{- with .Values.deployment.pod.containers.main.securityContext }}
           securityContext:
-            {{- toYaml . | nindent 12 }}
+            {{ toYaml . | nindent 12 }}
           {{- end }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- with .Values.deployment.pod.containers.main.envFrom }}
           envFrom:
-            {{- if .Values.configMap.enabled }}
-            - configMapRef:
-                name: {{ include "onechart.fullname" . }}-config
-            {{- end }}
-            {{- if .Values.externalSecrets.enabled }}
-            - secretRef:
-                # this Secret is created by the ExternalSecret controller
-                name: {{ include "onechart.fullname" . }}-secret
-            {{- end }}
-          {{- with .Values.env }}
+            {{ toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.deployment.pod.containers.main.env }}
           env:
-            {{- toYaml . | nindent 12 }}
+            {{ toYaml . | nindent 12 }}
           {{- end }}
+          {{- with .Values.deployment.pod.containers.main.ports }}
           ports:
-            - name: http
-              containerPort: {{ .Values.service.port }}
-              protocol: TCP
-          {{- with .Values.livenessProbe }}
+            {{ toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.deployment.pod.containers.main.livenessProbe }}
           livenessProbe:
-            {{- toYaml . | nindent 12 }}
+            {{ toYaml . | nindent 12 }}
           {{- end }}
-          {{- with .Values.readinessProbe }}
+          {{- with .Values.deployment.pod.containers.main.readinessProbe }}
           readinessProbe:
-            {{- toYaml . | nindent 12 }}
+            {{ toYaml . | nindent 12 }}
           {{- end }}
-          {{- with .Values.resources }}
+          {{- with .Values.deployment.pod.containers.main.resources }}
           resources:
-            {{- toYaml . | nindent 12 }}
+            {{ toYaml . | nindent 12 }}
           {{- end }}
-          {{- with .Values.volumeMounts }}
+          {{- with .Values.deployment.pod.containers.main.volumeMounts }}
           volumeMounts:
-            {{- toYaml . | nindent 12 }}
+            {{ toYaml . | nindent 12 }}
           {{- end }}
-      {{- with .Values.volumes }}
+
+        {{- range .Values.deployment.pod.sidecars }}
+        - name: {{ .name }}
+          image: {{ .image }}
+          {{- with .imagePullPolicy }}
+          imagePullPolicy: {{ . }}
+          {{- end }}
+          {{- with .env }}
+          env:
+            {{ toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .ports }}
+          ports:
+            {{ toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .volumeMounts }}
+          volumeMounts:
+            {{ toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .resources }}
+          resources:
+            {{ toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .securityContext }}
+          securityContext:
+            {{ toYaml . | nindent 12 }}
+          {{- end }}
+        {{- end }}
+
+      {{- with .Values.deployment.pod.volumes }}
       volumes:
-        {{- toYaml . | nindent 8 }}
+        {{ toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.nodeSelector }}
+      {{- with .Values.deployment.pod.nodeSelector }}
       nodeSelector:
-        {{- toYaml . | nindent 8 }}
+        {{ toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.affinity }}
+      {{- with .Values.deployment.pod.affinity }}
       affinity:
-        {{- toYaml . | nindent 8 }}
+        {{ toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.tolerations }}
+      {{- with .Values.deployment.pod.tolerations }}
       tolerations:
-        {{- toYaml . | nindent 8 }}
+        {{ toYaml . | nindent 8 }}
       {{- end }}

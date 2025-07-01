@@ -24,6 +24,15 @@ This repository contains a collection of Helm charts maintained by the CloudNati
    helm upgrade <release-name> cloudnative-zoo/<chart-name>
    ```
 
+## Local Testing
+
+To test charts locally, you can use the following commands:
+
+```sh
+helm lint --strict ./charts/onechart
+helm template ./charts/onechart --values ./charts/onechart/values.yaml > output.yaml
+```
+
 ## Contributing
 
 1. Fork the repository.

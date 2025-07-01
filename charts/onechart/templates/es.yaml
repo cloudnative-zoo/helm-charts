@@ -2,31 +2,31 @@
 apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
-  name: {{ include "onechart.fullname" . }}-external
+  name: {{ include "onechart.fullname" . }}-ext
+  namespace: {{ .Values.namespace.name }}
+  {{- with .Values.externalSecrets.labels }}
+  labels:
+    {{ toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .Values.externalSecrets.annotations }}
+  annotations:
+    {{ toYaml . | nindent 4 }}
+  {{- end }}
 spec:
-  # how often to refresh from the remote store
   refreshInterval: {{ .Values.externalSecrets.refreshInterval }}
-  # which SecretStore or ClusterSecretStore to use
   secretStoreRef:
     name: {{ .Values.externalSecrets.storeRef.name }}
     kind: {{ .Values.externalSecrets.storeRef.kind }}
-  # the resulting k8s Secret that will be created
   target:
     name: {{ include "onechart.fullname" . }}-secret
     creationPolicy: Owner
     template:
-      type: Opaque
       metadata:
+        {{- with .Values.externalSecrets.annotations }}
         annotations:
-          reloader.stakater.com/match: "true"
-  # mappings of keys in the k8s Secret -> remote secret locations
-  data:
-{{- range .Values.externalSecrets.data }}
-    - secretKey: {{ .secretKey | quote }}
-      remoteRef:
-        key: {{ .remoteRef.key | quote }}
-        {{- if .remoteRef.property }}
-        property: {{ .remoteRef.property | quote }}
+          {{ toYaml . | nindent 10 }}
         {{- end }}
-{{- end }}
+      type: {{ .Values.externalSecrets.targetType  | default "Opaque" }}
+  data:
+{{ toYaml .Values.externalSecrets.data | indent 4 }}
 {{- end }}

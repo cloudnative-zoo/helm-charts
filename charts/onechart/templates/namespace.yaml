@@ -1,10 +1,12 @@
 apiVersion: v1
 kind: Namespace
 metadata:
+  name: {{ .Values.namespace.name }}
+  {{- with .Values.namespace.labels }}
   labels:
-    {{- if .Values.istio.enabled }}
-    istio.io/dataplane-mode: ambient
-    {{- end }}
-    do-docker-credentials-secret: "true"
-    dockerhub-pull-secret: "true"
-  name: {{ .Values.namespace }}
+    {{ toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .Values.namespace.annotations }}
+  annotations:
+    {{ toYaml . | nindent 4 }}
+  {{- end }}
